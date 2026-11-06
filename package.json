@@ -1,6 +1,6 @@
 {
   "name": "@laylalabs/nuxt-back-button",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Hierarchical back button orchestration for Nuxt and Capacitor: priority stack, v-model binding, and customizable double-tap exit.",
   "repository": {
     "type": "git",

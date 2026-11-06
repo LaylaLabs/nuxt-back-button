@@ -19,9 +19,10 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   const win = window as any
   const capacitorApp = win?.Capacitor?.Plugins?.App
+  let listenerPromise: Promise<any> | null = null
 
   if (capacitorApp && typeof capacitorApp.addListener === 'function') {
-    capacitorApp.addListener('backButton', async () => {
+    listenerPromise = capacitorApp.addListener('backButton', async () => {
       // 1. Try to execute top priority handler in stack (modals, drawers, steps)
       const consumed = await stack.executeTopHandler()
       if (consumed) return
@@ -75,10 +76,16 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
   }
 
-  // Cleanup on HMR
-  if (import.meta.hot && capacitorApp?.removeAllListeners) {
-    import.meta.hot.dispose(() => {
-      capacitorApp.removeAllListeners()
+  // Cleanup specifically this listener on HMR without wiping out other plugin listeners
+  if (import.meta.hot && listenerPromise) {
+    import.meta.hot.dispose(async () => {
+      try {
+        const handle = await listenerPromise
+        await handle?.remove?.()
+      }
+      catch (err) {
+        if (debug) console.warn('[BackButton] Failed to remove listener on HMR dispose:', err)
+      }
     })
   }
 

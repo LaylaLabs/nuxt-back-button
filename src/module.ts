@@ -49,3 +49,4 @@ declare module '@nuxt/schema' {
     backButton?: ModuleOptions
   }
 }
+

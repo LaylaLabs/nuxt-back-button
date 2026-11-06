@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import type { BackButtonHandler, BackButtonOptions } from '../../types'
 
 export const BACK_BUTTON_PRIORITY = {
@@ -16,6 +16,7 @@ export const BACK_BUTTON_PRIORITY = {
 export class BackButtonStack {
   private handlers = ref<BackButtonHandler[]>([])
   private debug = false
+  private isExecuting = false
 
   constructor(options: { debug?: boolean } = {}) {
     this.debug = Boolean(options.debug)
@@ -51,6 +52,23 @@ export class BackButtonStack {
     return id
   }
 
+  public update(id: string, options: Partial<BackButtonOptions>): void {
+    const record = this.handlers.value.find(h => h.id === id)
+    if (!record) return
+
+    if (options.priority !== undefined) {
+      record.priority = options.priority
+    }
+    if (options.label !== undefined) {
+      record.label = options.label
+    }
+
+    if (this.debug) {
+      // eslint-disable-next-line no-console
+      console.info(`[BackButton] Updated handler: ${record.label || id} (priority: ${record.priority})`)
+    }
+  }
+
   public unregister(id: string): void {
     const index = this.handlers.value.findIndex(h => h.id === id)
     if (index !== -1) {
@@ -63,29 +81,44 @@ export class BackButtonStack {
   }
 
   public async executeTopHandler(): Promise<boolean> {
-    const sorted = this.sortedHandlers
-
-    for (const record of sorted) {
-      try {
-        const consumed = await record.handler()
-        if (consumed) {
-          if (this.debug) {
-            // eslint-disable-next-line no-console
-            console.info(`[BackButton] Event consumed by: ${record.label || record.id}`)
-          }
-          return true
-        }
-      }
-      catch (error) {
+    if (this.isExecuting) {
+      if (this.debug) {
         // eslint-disable-next-line no-console
-        console.error(`[BackButton] Error in handler ${record.label || record.id}:`, error)
+        console.warn('[BackButton] executeTopHandler is already executing, ignoring concurrent back press.')
       }
+      return true
     }
 
-    return false
+    this.isExecuting = true
+    try {
+      const sorted = this.sortedHandlers
+
+      for (const record of sorted) {
+        try {
+          const consumed = await record.handler()
+          if (consumed) {
+            if (this.debug) {
+              // eslint-disable-next-line no-console
+              console.info(`[BackButton] Event consumed by: ${record.label || record.id}`)
+            }
+            return true
+          }
+        }
+        catch (error) {
+          // eslint-disable-next-line no-console
+          console.error(`[BackButton] Error in handler ${record.label || record.id}:`, error)
+        }
+      }
+
+      return false
+    }
+    finally {
+      this.isExecuting = false
+    }
   }
 
   public clear(): void {
     this.handlers.value = []
+    this.isExecuting = false
   }
 }

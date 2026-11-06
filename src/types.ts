@@ -65,3 +65,4 @@ export interface ModuleOptions {
    */
   debug?: boolean
 }
+

@@ -40,6 +40,35 @@ describe('BackButtonStack', () => {
     expect(executionOrder).toEqual(['top-not-consumed', 'second-consumed'])
   })
 
+  it('prevents concurrent executions while an async handler is in flight', async () => {
+    const stack = new BackButtonStack()
+    let executionCount = 0
+
+    stack.register(async () => {
+      executionCount++
+      await new Promise(r => setTimeout(r, 50))
+      return true
+    }, { priority: 50 })
+
+    // Simulate rapid concurrent back button taps
+    const [res1, res2] = await Promise.all([
+      stack.executeTopHandler(),
+      stack.executeTopHandler(),
+    ])
+
+    expect(res1).toBe(true)
+    expect(res2).toBe(true)
+    expect(executionCount).toBe(1)
+  })
+
+  it('updates handler priority dynamically', async () => {
+    const stack = new BackButtonStack()
+    const id = stack.register(() => true, { priority: 10 })
+
+    stack.update(id, { priority: 80 })
+    expect(stack.sortedHandlers[0]?.priority).toBe(80)
+  })
+
   it('unregisters handlers correctly', async () => {
     const stack = new BackButtonStack()
     const id = stack.register(() => true, { priority: 50 })

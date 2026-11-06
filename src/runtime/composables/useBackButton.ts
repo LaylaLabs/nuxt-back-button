@@ -1,5 +1,5 @@
 import { useNuxtApp } from '#app'
-import { onUnmounted, watch, type Ref } from 'vue'
+import { onUnmounted, watch, getCurrentInstance, type Ref } from 'vue'
 import { BACK_BUTTON_PRIORITY, type BackButtonStack } from '../core/stack'
 import type { BackButtonCallback, BackButtonOptions } from '../../types'
 
@@ -21,6 +21,14 @@ export function useBackButton() {
     const id = stack.register(handler, options)
     localRegisteredIds.push(id)
     return id
+  }
+
+  /**
+   * Updates options (priority or label) of an existing handler.
+   */
+  function updatePriority(id: string, priority: number): void {
+    if (!stack) return
+    stack.update(id, { priority })
   }
 
   /**
@@ -65,12 +73,14 @@ export function useBackButton() {
       { immediate: true },
     )
 
-    onUnmounted(() => {
-      if (handlerId) {
-        off(handlerId)
-        handlerId = null
-      }
-    })
+    if (getCurrentInstance()) {
+      onUnmounted(() => {
+        if (handlerId) {
+          off(handlerId)
+          handlerId = null
+        }
+      })
+    }
   }
 
   /**
@@ -81,16 +91,19 @@ export function useBackButton() {
     return stack.executeTopHandler()
   }
 
-  // Automatic cleanup of handlers registered within this component lifecycle
-  onUnmounted(() => {
-    if (!stack) return
-    for (const id of localRegisteredIds) {
-      stack.unregister(id)
-    }
-  })
+  // Automatic cleanup of handlers registered within this component lifecycle (if within Vue component)
+  if (getCurrentInstance()) {
+    onUnmounted(() => {
+      if (!stack) return
+      for (const id of localRegisteredIds) {
+        stack.unregister(id)
+      }
+    })
+  }
 
   return {
     onBackButton,
+    updatePriority,
     off,
     bindToModel,
     executeTopHandler,
