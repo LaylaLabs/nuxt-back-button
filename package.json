@@ -1,0 +1,57 @@
+{
+  "name": "@laylalabs/nuxt-back-button",
+  "version": "0.1.0",
+  "description": "Hierarchical back button orchestration for Nuxt and Capacitor: priority stack, v-model binding, and customizable double-tap exit.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LaylaLabs/nuxt-back-button.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LaylaLabs/nuxt-back-button/issues"
+  },
+  "homepage": "https://github.com/LaylaLabs/nuxt-back-button#readme",
+  "author": "LaylaLabs <dev@laylalabs.com>",
+  "license": "MIT",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    }
+  },
+  "main": "./dist/module.mjs",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepack": "nuxt-module-build prepare && nuxt-module-build build",
+    "build": "nuxt-module-build prepare && nuxt-module-build build",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nuxt/kit": "^4.6.4",
+    "defu": "^6.1.4"
+  },
+  "devDependencies": {
+    "@nuxt/module-builder": "^1.0.3",
+    "@nuxt/schema": "^4.6.4",
+    "@nuxt/test-utils": "^4.3.3",
+    "@types/node": "latest",
+    "nuxt": "^4.6.4",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3",
+    "vue": "^3.5.45",
+    "vue-tsc": "^3.3.12"
+  }
+}
